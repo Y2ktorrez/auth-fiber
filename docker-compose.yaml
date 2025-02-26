@@ -1,0 +1,40 @@
+version: '3.8'
+services:
+  go_app:
+    container_name: go_app
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      go_db:
+        condition: service_healthy
+    environment:
+      - PORT=8000
+      - DB_HOST=go_db
+      - DB_USER=y2k  # Coincide con POSTGRES_USER en go_db
+      - DB_PASS=root
+      - DB_NAME=fiber
+      - DB_PORT=5432
+      - JWT_SECRET=tu_clave_secreta_muy_segura
+      - CORS_ORIGINS=http://localhost:3000
+
+  go_db:
+    image: postgres
+    container_name: auth-go_db
+    restart: always
+    environment:
+      - POSTGRES_DB=fiber
+      - POSTGRES_USER=y2k
+      - POSTGRES_PASSWORD=root
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data  # Usa un volumen nombrado
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U y2k -d fiber"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
